@@ -1,0 +1,506 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#401923">
+  <title>THE INDUSTRY PASSPORT</title>
+
+  <style>
+    :root {
+      --wine: #401923;
+      --wine-deep: #291018;
+      --ivory: #F2E9DC;
+      --gold: #D9B779;
+      --ink: #2a1b1b;
+      --muted: #a99a8c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ivory);
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(217,183,121,.13), transparent 42%),
+        linear-gradient(145deg, #1d1015, var(--wine-deep) 55%, #160d11);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .shell {
+      width: min(920px, 100% - 32px);
+      margin: 0 auto;
+      padding: 42px 0 64px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      letter-spacing: .28em;
+      font: 10px/1.5 Arial, sans-serif;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 13px 0 8px;
+      font-size: clamp(25px, 5vw, 42px);
+      font-weight: 400;
+      letter-spacing: .12em;
+    }
+
+    .rule {
+      width: 86px;
+      height: 1px;
+      background: var(--gold);
+      margin: 18px auto;
+      opacity: .8;
+    }
+
+    .subtitle {
+      color: #c9b9a8;
+      font: 11px/1.7 Arial, sans-serif;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .identity {
+      text-align: center;
+      margin: 0 auto 28px;
+    }
+
+    .identity h2 {
+      margin: 0 0 7px;
+      font-size: clamp(21px, 4vw, 30px);
+      font-weight: 400;
+    }
+
+    .identity p {
+      margin: 0;
+      color: var(--gold);
+      font: 11px Arial, sans-serif;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .pages {
+      display: grid;
+      gap: 22px;
+    }
+
+    .page {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(217,183,121,.4);
+      border-radius: 3px;
+      background: #e9dfd1;
+      box-shadow: 0 18px 45px rgba(0,0,0,.32);
+      line-height: 0;
+    }
+
+    .page-background {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      line-height: normal;
+    }
+
+    .stamp-overlay {
+      position: absolute;
+      display: block;
+      height: auto;
+      max-width: none;
+      object-fit: contain;
+      transform: translate(-50%, -50%);
+      transform-origin: center;
+    }
+
+    .text-overlay {
+      position: absolute;
+      display: block;
+      margin: 0;
+      padding: 0;
+      transform: translate(-50%, -50%);
+      transform-origin: center;
+      text-align: center;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.2;
+      max-width: none;
+      pointer-events: none;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      color: rgba(64,25,35,.65);
+      font: 10px Arial, sans-serif;
+      letter-spacing: .12em;
+      line-height: normal;
+      pointer-events: none;
+    }
+
+    .state {
+      margin: 30px auto 0;
+      max-width: 540px;
+      padding: 20px 22px;
+      text-align: center;
+      border: 1px solid rgba(217,183,121,.28);
+      color: #d7c9ba;
+      font: 13px/1.65 Arial, sans-serif;
+      background: rgba(255,255,255,.035);
+    }
+
+    .state strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--gold);
+      font: 13px Georgia, serif;
+      letter-spacing: .08em;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 42px;
+      color: #8f7d76;
+      font: 9px Arial, sans-serif;
+      letter-spacing: .22em;
+    }
+
+    @media (min-width: 720px) {
+      .shell {
+        padding-top: 58px;
+      }
+
+      .pages {
+        gap: 28px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .shell {
+        width: calc(100% - 20px);
+        padding-top: 30px;
+      }
+
+      header {
+        margin-bottom: 26px;
+      }
+
+      .page-number {
+        right: 8px;
+        bottom: 7px;
+        font-size: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+
+    <header>
+      <div class="eyebrow">The Racers present</div>
+      <h1>THE INDUSTRY PASSPORT</h1>
+      <div class="rule"></div>
+      <div class="subtitle">A passport to the online industry</div>
+    </header>
+
+    <section id="identity" class="identity hidden">
+      <h2 id="member-name"></h2>
+      <p id="project-name"></p>
+    </section>
+
+    <section id="pages" class="pages"></section>
+
+    <section id="state" class="state">
+      <strong>YOUR PASSPORT</strong>
+      Loading passport pages…
+    </section>
+
+    <footer>
+      THE INDUSTRY PASSPORT · OFFICIAL PARTICIPANT EDITION
+    </footer>
+
+  </main>
+
+  <script>
+    // Public browser key only.
+    // Never paste a service_role key here.
+
+    const SUPABASE_URL =
+      "https://iqbihzeiqvdpmnxhydkg.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_uj_0pOoegG_p8oBUISibZA_EjwZieRs";
+
+    const FUNCTION_URL =
+      `${SUPABASE_URL}/functions/v1/get-passport`;
+
+    const state = document.getElementById("state");
+    const identity = document.getElementById("identity");
+    const pagesEl = document.getElementById("pages");
+
+    function showMessage(title, message) {
+      state.classList.remove("hidden");
+
+      state.replaceChildren();
+
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+
+      const description = document.createElement("span");
+      description.textContent = message;
+
+      state.append(heading, description);
+    }
+
+    function getNumber(value, fallback) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function createStamp(stamp) {
+      if (!stamp.image_url) return null;
+
+      const img = document.createElement("img");
+
+      img.className = "stamp-overlay";
+      img.src = stamp.image_url;
+      img.alt = "Passport stamp";
+      img.draggable = false;
+
+      const x = getNumber(stamp.x, 50);
+      const y = getNumber(stamp.y, 50);
+      const width = getNumber(stamp.width, 15);
+      const rotation = getNumber(stamp.rotation, 0);
+
+      img.style.left = `${x}%`;
+      img.style.top = `${y}%`;
+      img.style.width = `${width}%`;
+      img.style.transform =
+        `translate(-50%, -50%) rotate(${rotation}deg)`;
+
+      return img;
+    }
+
+    function createText(textItem, image, textElements) {
+      const element = document.createElement("div");
+
+      element.className = "text-overlay";
+      element.textContent = textItem.content ?? "";
+
+      const x = getNumber(textItem.x, 50);
+      const y = getNumber(textItem.y, 50);
+      const width = getNumber(textItem.width, 30);
+      const rotation = getNumber(textItem.rotation, 0);
+      const fontSize = getNumber(textItem.font_size, 16);
+
+      element.style.left = `${x}%`;
+      element.style.top = `${y}%`;
+      element.style.width = `${width}%`;
+
+      element.style.fontFamily =
+        textItem.font_family || "Georgia, serif";
+
+      element.style.color =
+        textItem.color || "#2a1b1b";
+
+      element.style.fontWeight =
+        textItem.font_weight || "normal";
+
+      element.style.transform =
+        `translate(-50%, -50%) rotate(${rotation}deg)`;
+
+      element.dataset.baseFontSize = String(fontSize);
+
+      textElements.push(element);
+
+      return element;
+    }
+
+    function updateTextSizes(image, textElements) {
+      if (!image.complete || !image.clientHeight) return;
+
+      // The editor preview uses an image height of approximately 650px.
+      // This keeps saved font sizes proportional on different screens.
+
+      const scale = image.clientHeight / 650;
+
+      textElements.forEach(element => {
+        const baseSize = Number(element.dataset.baseFontSize);
+
+        element.style.fontSize =
+          `${Math.max(1, baseSize * scale)}px`;
+      });
+    }
+
+    function createPage(page) {
+      const article = document.createElement("article");
+      article.className = "page";
+
+      const image = document.createElement("img");
+      image.className = "page-background";
+      image.src = page.image_url;
+      image.alt = `Passport page ${page.page_number}`;
+      image.loading = "lazy";
+      image.draggable = false;
+
+      const overlay = document.createElement("div");
+      overlay.className = "overlay";
+
+      const textElements = [];
+
+      // Stamps
+      (page.stamps || []).forEach(stamp => {
+        const stampElement = createStamp(stamp);
+
+        if (stampElement) {
+          overlay.appendChild(stampElement);
+        }
+      });
+
+      // Text
+      (page.texts || []).forEach(textItem => {
+        const textElement = createText(
+          textItem,
+          image,
+          textElements
+        );
+
+        overlay.appendChild(textElement);
+      });
+
+      // Responsive text sizing
+      image.addEventListener("load", () => {
+        updateTextSizes(image, textElements);
+      });
+
+      if (image.complete) {
+        updateTextSizes(image, textElements);
+      }
+
+      if ("ResizeObserver" in window) {
+        const observer = new ResizeObserver(() => {
+          updateTextSizes(image, textElements);
+        });
+
+        observer.observe(image);
+      } else {
+        window.addEventListener("resize", () => {
+          updateTextSizes(image, textElements);
+        });
+      }
+
+      const number = document.createElement("span");
+      number.className = "page-number";
+      number.textContent =
+        String(page.page_number).padStart(2, "0");
+
+      article.append(image, overlay, number);
+
+      return article;
+    }
+
+    async function loadPassport() {
+      const token =
+        new URLSearchParams(location.search).get("token");
+
+      if (!token) {
+        showMessage(
+          "PASSPORT LINK REQUIRED",
+          "Open the personal link provided by the project administrator."
+        );
+        return;
+      }
+
+      if (SUPABASE_PUBLISHABLE_KEY.startsWith("PASTE_")) {
+        showMessage(
+          "SETUP REQUIRED",
+          "The site needs the Supabase publishable key before it can load passports."
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch(FUNCTION_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+          },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage(
+            response.status === 404
+              ? "PASSPORT NOT FOUND"
+              : "COULD NOT LOAD PASSPORT",
+            response.status === 404
+              ? "Check that the personal link is correct."
+              : "Please try again later or contact the administrator."
+          );
+
+          return;
+        }
+
+        document.getElementById("member-name").textContent =
+          data.participant?.name || "Participant";
+
+        document.getElementById("project-name").textContent =
+          data.participant?.project_name || "";
+
+        identity.classList.remove("hidden");
+
+        pagesEl.replaceChildren();
+
+        for (const page of (data.pages || [])) {
+          pagesEl.appendChild(createPage(page));
+        }
+
+        if (!data.pages?.length) {
+          showMessage(
+            "PASSPORT CREATED",
+            "This passport does not have any pages attached yet."
+          );
+        } else {
+          state.classList.add("hidden");
+        }
+
+      } catch (error) {
+        console.error("Passport loading error:", error);
+
+        showMessage(
+          "CONNECTION ERROR",
+          "The passport could not be reached. Check your connection and try again."
+        );
+      }
+    }
+
+    loadPassport();
+  </script>
+</body>
+</html>

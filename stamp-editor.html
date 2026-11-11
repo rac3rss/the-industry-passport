@@ -1,0 +1,1149 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE INDUSTRY PASSPORT — Stamp Editor</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px;
+      min-height: 100vh;
+      background: #101014;
+      color: #f4f0e8;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      margin-bottom: 35px;
+      border-bottom: 1px solid #39363b;
+      padding-bottom: 20px;
+    }
+
+    .eyebrow {
+      color: #a99a82;
+      font-size: 11px;
+      letter-spacing: 4px;
+    }
+
+    h1 {
+      font-size: 27px;
+      letter-spacing: 3px;
+      font-weight: 400;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 25px;
+    }
+
+    .panel {
+      background: #1b1a20;
+      border: 1px solid #39363b;
+      padding: 22px;
+    }
+
+    h2 {
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: #c8b99e;
+      font-weight: 400;
+    }
+
+    label {
+      display: block;
+      margin-top: 22px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #b7b0a5;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 12px;
+      background: #29272e;
+      border: 1px solid #514b53;
+      color: white;
+      font-size: 13px;
+    }
+
+    button {
+      margin-top: 15px;
+      cursor: pointer;
+      background: #b19a77;
+      color: #171519;
+      border: none;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      background: #c8b18d;
+    }
+
+    .workspace {
+      min-height: 550px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1b1a20;
+      border: 1px solid #39363b;
+      padding: 25px;
+    }
+
+    .placeholder {
+      color: #8d8790;
+      text-align: center;
+      line-height: 1.8;
+      font-size: 13px;
+    }
+
+.page-canvas {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 650px;
+}
+
+.page-image {
+  display: block;
+  max-width: 100%;
+  max-height: 650px;
+  object-fit: contain;
+}
+
+
+ .stamp-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.stamp-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 1px dashed #d6bd96;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+.stamp-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.text-wrapper {
+  position: absolute;
+  min-height: 24px;
+  padding: 5px;
+  border: 1px dashed #d6bd96;
+  transform-origin: center;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  right: -6px;
+  bottom: -6px;
+  background: #d6bd96;
+  border: 2px solid #101014;
+  cursor: nwse-resize;
+}
+.text-resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  right: -6px;
+  bottom: -6px;
+  background: #8b789f;
+  border: 2px solid #101014;
+  cursor: nwse-resize;
+}
+.rotate-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #d6bd96;
+  border: 2px solid #101014;
+  cursor: grab;
+}
+    #status {
+      margin-top: 20px;
+      color: #c8b99e;
+      font-size: 12px;
+    }
+
+    @media (max-width: 750px) {
+      body {
+        padding: 16px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="eyebrow">THE RACERS PRESENT</div>
+  <h1>THE INDUSTRY PASSPORT</h1>
+  <div class="eyebrow">STAMP EDITOR · ADMINISTRATION</div>
+</header>
+
+<main class="layout">
+
+  <section class="panel">
+    <h2>STAMP CONTROLS</h2>
+
+    <label>PARTICIPANT</label>
+    <select id="participant">
+      <option value="">Select participant</option>
+    </select>
+
+    <label>PASSPORT PAGE</label>
+    <select id="page">
+      <option value="1">Page 01 — Cover</option>
+      <option value="2">Page 02 — Information</option>
+      <option value="3">Page 03 — Stamps I</option>
+      <option value="4">Page 04 — Stamps II</option>
+      <option value="5">Page 05 — Stamps III</option>
+    </select>
+
+    <label>STAMP IMAGE</label>
+    <input type="file" id="stampFile" accept="image/png">
+
+    <button id="uploadButton">UPLOAD STAMP</button>
+<button id="addTextButton" style="background:#8b789f;color:white;">
+  ADD TEXT
+</button>
+<button id="editTextButton" style="background:#66718a;color:white;">
+  EDIT SELECTED TEXT
+</button>
+<button id="deleteButton" style="background:#713f43;color:white;">
+  DELETE SELECTED STAMP
+</button>
+<button id="deleteTextButton" style="background:#713f43;color:white;">
+  DELETE SELECTED TEXT
+</button>
+<button id="replaceButton" style="background:#66718a;color:white;">
+  REPLACE SELECTED STAMP
+</button>
+
+    <div id="status">EDITOR INITIALIZING...</div>
+  </section>
+
+  <section class="workspace">
+    <div class="placeholder">
+      PASSPORT PAGE PREVIEW
+
+      <br>
+
+      The selected passport page will appear here.
+    </div>
+  </section>
+
+</main>
+
+<script>
+const SUPABASE_URL = "https://iqbihzeiqvdpmnxhydkg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uj_0pOoegG_p8oBUISibZA_EjwZieRs";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const status = document.getElementById("status");
+const participantSelect = document.getElementById("participant");
+
+async function initializeEditor() {
+  try {
+    const { data: { session }, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!session) {
+      status.textContent = "ADMIN LOGIN REQUIRED";
+      return;
+    }
+
+    const { data: admin, error: adminError } = await db
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+
+    if (!admin) {
+      status.textContent = "ACCESS DENIED";
+      return;
+    }
+
+    const { data: participants, error } = await db
+      .from("participants")
+      .select("id, name, project_name")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    participants.forEach(person => {
+      const option = document.createElement("option");
+      option.value = person.id;
+      option.textContent =
+        person.name + " — " + person.project_name;
+
+      participantSelect.appendChild(option);
+    });
+
+    status.textContent = "ADMIN ACCESS CONFIRMED";
+  } catch (error) {
+    console.error(error);
+    status.textContent = "ERROR: " + error.message;
+  }
+}
+const pageSelect = document.getElementById("page");
+const workspace = document.querySelector(".workspace");
+let selectedStampId = null;
+let selectedTextId = null;
+
+
+async function loadPassportPreview() {
+  selectedStampId = null;
+  selectedTextId = null;
+
+  const participantId = participantSelect.value;
+  const pageNumber = Number(pageSelect.value);
+
+  if (!participantId) {
+    workspace.innerHTML =
+      '<div class="placeholder">SELECT PARTICIPANT</div>';
+    return;
+  }
+
+  status.textContent = "LOADING PASSPORT PAGE...";
+
+  try {
+    const { data: page, error } = await db
+      .from("passport_pages")
+      .select("image_path")
+      .eq("participant_id", participantId)
+      .eq("page_number", pageNumber)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!page) {
+      workspace.innerHTML =
+        '<div class="placeholder">PAGE NOT FOUND</div>';
+      status.textContent = "NO PAGE DATA";
+      return;
+    }
+
+    const { data: image, error: imageError } = await db
+      .storage
+      .from("passport-pages")
+      .createSignedUrl(page.image_path, 3600);
+
+    if (imageError) throw imageError;
+
+    const canvas = document.createElement("div");
+    canvas.className = "page-canvas";
+
+    const img = document.createElement("img");
+    img.className = "page-image";
+    img.src = image.signedUrl;
+    img.alt = "Passport page " + pageNumber;
+
+    const layer = document.createElement("div");
+    layer.className = "stamp-layer";
+
+    canvas.append(img, layer);
+    workspace.replaceChildren(canvas);
+
+    const { data: stamps, error: stampsError } = await db
+      .from("passport_stamps")
+      .select("id, image_path, x, y, width, rotation")
+      .eq("participant_id", participantId)
+      .eq("page_number", pageNumber);
+
+    if (stampsError) throw stampsError;
+const { data: texts, error: textsError } = await db
+  .from("passport_texts")
+  .select("*")
+  .eq("participant_id", participantId)
+  .eq("page_number", pageNumber);
+
+if (textsError) throw textsError;
+
+    
+stamps.forEach(stamp => {
+  const { data: stampFile } = db.storage
+    .from("passport-stamps")
+    .getPublicUrl(stamp.image_path);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "stamp-wrapper";
+function selectStamp() {
+wrapper.addEventListener("click", selectStamp);
+  document.querySelectorAll(".stamp-wrapper").forEach(item => {
+    item.style.outline = "none";
+  });
+
+  wrapper.style.outline = "2px solid #d6bd96";
+  selectedStampId = stamp.id;
+  status.textContent = "STAMP SELECTED";
+}
+  wrapper.style.left = Number(stamp.x) + "%";
+  wrapper.style.top = Number(stamp.y) + "%";
+  wrapper.style.width = Number(stamp.width) + "%";
+  wrapper.style.transform =
+    "translate(-50%, -50%) rotate(" +
+    Number(stamp.rotation) + "deg)";
+
+  const stampImg = document.createElement("img");
+  stampImg.className = "stamp-image";
+  stampImg.src = stampFile.publicUrl;
+  stampImg.draggable = false;
+
+  const resizeHandle = document.createElement("div");
+resizeHandle.className = "resize-handle";
+
+const rotateHandle = document.createElement("div");
+rotateHandle.className = "rotate-handle";
+
+wrapper.appendChild(stampImg);
+wrapper.appendChild(resizeHandle);
+wrapper.appendChild(rotateHandle);
+layer.appendChild(wrapper);
+
+  let mode = null;
+let startX = 0;
+let startY = 0;
+let startLeft = 0;
+let startTop = 0;
+let startWidth = 0;
+let startAngle = 0;
+let startRotation = 0;
+
+  async function saveStamp(changes) {
+    const { error } = await db
+      .from("passport_stamps")
+      .update(changes)
+      .eq("id", stamp.id);
+
+    if (error) {
+      console.error(error);
+      status.textContent = "SAVE ERROR: " + error.message;
+    } else {
+      status.textContent = "STAMP SAVED";
+    }
+  }
+
+  wrapper.addEventListener("pointerdown", event => {
+    if (
+      event.target === resizeHandle ||
+      event.target === rotateHandle
+    ) return;
+
+    event.preventDefault();
+    mode = "drag";
+
+    const rect = layer.getBoundingClientRect();
+    startX = event.clientX;
+    startY = event.clientY;
+    startLeft = Number(stamp.x);
+    startTop = Number(stamp.y);
+
+    wrapper.setPointerCapture(event.pointerId);
+  });
+
+  resizeHandle.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    mode = "resize";
+    startX = event.clientX;
+    startWidth = Number(stamp.width);
+
+    resizeHandle.setPointerCapture(event.pointerId);
+  });
+rotateHandle.addEventListener("pointerdown", event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  mode = "rotate";
+
+  const rect = wrapper.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  startAngle = Math.atan2(
+    event.clientY - centerY,
+    event.clientX - centerX
+  ) * 180 / Math.PI;
+
+  startRotation = Number(stamp.rotation) || 0;
+
+  rotateHandle.setPointerCapture(event.pointerId);
+});
+rotateHandle.addEventListener("pointermove", event => {
+  if (mode !== "rotate") return;
+
+  const rect = wrapper.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const currentAngle = Math.atan2(
+    event.clientY - centerY,
+    event.clientX - centerX
+  ) * 180 / Math.PI;
+
+  const newRotation =
+    startRotation + currentAngle - startAngle;
+
+  stamp.rotation = newRotation;
+
+  wrapper.style.transform =
+    "translate(-50%, -50%) rotate(" +
+    newRotation + "deg)";
+});
+
+  wrapper.addEventListener("pointermove", event => {
+    if (mode !== "drag") return;
+
+    const rect = layer.getBoundingClientRect();
+
+    const dx = (event.clientX - startX) / rect.width * 100;
+    const dy = (event.clientY - startY) / rect.height * 100;
+
+    const newX = Math.max(0, Math.min(100, startLeft + dx));
+    const newY = Math.max(0, Math.min(100, startTop + dy));
+
+    wrapper.style.left = newX + "%";
+    wrapper.style.top = newY + "%";
+
+    stamp.x = newX;
+    stamp.y = newY;
+  });
+
+  resizeHandle.addEventListener("pointermove", event => {
+    if (mode !== "resize") return;
+
+    const rect = layer.getBoundingClientRect();
+    const dx = (event.clientX - startX) / rect.width * 100;
+
+    const newWidth = Math.max(
+      3,
+      Math.min(80, startWidth + dx)
+    );
+
+    wrapper.style.width = newWidth + "%";
+    stamp.width = newWidth;
+  });
+rotateHandle.addEventListener("pointermove", event => {
+  if (mode !== "rotate") return;
+
+  const rect = wrapper.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const currentAngle = Math.atan2(
+    event.clientY - centerY,
+    event.clientX - centerX
+  ) * 180 / Math.PI;
+
+  const newRotation =
+    startRotation + currentAngle - startAngle;
+
+  stamp.rotation = newRotation;
+
+  wrapper.style.transform =
+    "translate(-50%, -50%) rotate(" +
+    newRotation + "deg)";
+});
+
+  wrapper.addEventListener("pointerup", async event => {
+    if (mode !== "drag") return;
+
+    mode = null;
+    await saveStamp({
+      x: stamp.x,
+      y: stamp.y
+    });
+  });
+
+  resizeHandle.addEventListener("pointerup", async event => {
+    if (mode !== "resize") return;
+
+    mode = null;
+    await saveStamp({
+      width: stamp.width
+    });
+  });
+rotateHandle.addEventListener("pointerup", async () => {
+  if (mode !== "rotate") return;
+
+  mode = null;
+
+  await saveStamp({
+    rotation: stamp.rotation
+  });
+});
+
+rotateHandle.addEventListener("pointercancel", () => {
+  mode = null;
+});
+
+rotateHandle.addEventListener("lostpointercapture", async () => {
+  if (mode === "rotate") {
+    mode = null;
+
+    await saveStamp({
+      rotation: stamp.rotation
+    });
+  }
+});
+  wrapper.addEventListener("pointercancel", () => {
+    mode = null;
+  });
+
+wrapper.addEventListener("lostpointercapture", async () => {
+  if (mode === "drag") {
+    mode = null;
+    await saveStamp({
+      x: stamp.x,
+      y: stamp.y
+    });
+  }
+});
+
+  resizeHandle.addEventListener("pointercancel", () => {
+    mode = null;
+  });
+resizeHandle.addEventListener("lostpointercapture", async () => {
+  if (mode === "resize") {
+    mode = null;
+    await saveStamp({
+      width: stamp.width
+    });
+  }
+});
+});
+
+texts.forEach(textItem => {
+  const textWrapper = document.createElement("div");
+
+  textWrapper.className = "text-wrapper";
+  textWrapper.textContent = textItem.content;
+  textWrapper.style.left = Number(textItem.x) + "%";
+  textWrapper.style.top = Number(textItem.y) + "%";
+  textWrapper.style.width = Number(textItem.width) + "%";
+
+  textWrapper.style.transform =
+    "translate(-50%, -50%) rotate(" +
+    Number(textItem.rotation) + "deg)";
+
+  textWrapper.style.fontFamily = textItem.font_family;
+  textWrapper.style.fontSize = Number(textItem.font_size) + "px";
+  textWrapper.style.color = textItem.color;
+  textWrapper.style.fontWeight = textItem.font_weight;
+const textResizeHandle = document.createElement("div");
+textResizeHandle.className = "text-resize-handle";
+
+textWrapper.appendChild(textResizeHandle);
+layer.appendChild(textWrapper);
+
+  let mode = null;
+  let startX = 0;
+  let startY = 0;
+  let startLeft = 0;
+  let startTop = 0;
+let startWidth = 0;
+let startFontSize = 0;
+
+  textWrapper.addEventListener("pointerdown", event => {
+    event.preventDefault();
+if (event.target === textResizeHandle) return;
+document.querySelectorAll(".text-wrapper").forEach(item => {
+  item.style.outline = "none";
+});
+
+textWrapper.style.outline = "2px solid #8b789f";
+selectedTextId = textItem.id;
+status.textContent = "TEXT SELECTED";
+    mode = "drag";
+
+    startX = event.clientX;
+    startY = event.clientY;
+    startLeft = Number(textItem.x);
+    startTop = Number(textItem.y);
+
+    textWrapper.setPointerCapture(event.pointerId);
+  });
+textResizeHandle.addEventListener("pointerdown", event => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  mode = "resize";
+  startX = event.clientX;
+  startWidth = Number(textItem.width);
+  startFontSize = Number(textItem.font_size);
+
+  textResizeHandle.setPointerCapture(event.pointerId);
+});
+
+textResizeHandle.addEventListener("pointermove", event => {
+  if (mode !== "resize") return;
+
+  const rect = layer.getBoundingClientRect();
+  const dx = (event.clientX - startX) / rect.width * 100;
+
+  const newWidth = Math.max(5, Math.min(80, startWidth + dx));
+  const newFontSize = Math.max(
+    8,
+    Math.min(100, startFontSize * (newWidth / startWidth))
+  );
+
+  textWrapper.style.width = newWidth + "%";
+  textWrapper.style.fontSize = newFontSize + "px";
+
+  textItem.width = newWidth;
+  textItem.font_size = newFontSize;
+});
+
+async function saveTextSize() {
+  const { error } = await db
+    .from("passport_texts")
+    .update({
+      width: textItem.width,
+      font_size: textItem.font_size
+    })
+    .eq("id", textItem.id);
+
+  status.textContent = error
+    ? "TEXT RESIZE ERROR: " + error.message
+    : "TEXT SIZE SAVED";
+}
+
+textResizeHandle.addEventListener("pointerup", async () => {
+  if (mode !== "resize") return;
+  mode = null;
+  await saveTextSize();
+});
+
+textResizeHandle.addEventListener("pointercancel", () => {
+  mode = null;
+});
+
+  textWrapper.addEventListener("pointermove", event => {
+    if (mode !== "drag") return;
+
+    const rect = layer.getBoundingClientRect();
+
+    const dx = (event.clientX - startX) / rect.width * 100;
+    const dy = (event.clientY - startY) / rect.height * 100;
+
+    const newX = Math.max(0, Math.min(100, startLeft + dx));
+    const newY = Math.max(0, Math.min(100, startTop + dy));
+
+    textWrapper.style.left = newX + "%";
+    textWrapper.style.top = newY + "%";
+
+    textItem.x = newX;
+    textItem.y = newY;
+  });
+
+ 
+
+textWrapper.addEventListener("pointerup", async event => {
+  if (mode !== "drag") return;
+
+  mode = null;
+
+  try {
+    const { error } = await db
+      .from("passport_texts")
+      .update({
+        x: textItem.x,
+        y: textItem.y
+      })
+      .eq("id", textItem.id);
+
+    if (error) throw error;
+
+    status.textContent = "TEXT POSITION SAVED";
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "TEXT SAVE ERROR: " + error.message;
+  }
+});
+
+// Закрываем texts.forEach
+});
+
+// Закрываем внешний try/catch loadPassportPreview
+} catch (error) {
+  console.error(error);
+  status.textContent = "PREVIEW ERROR: " + error.message;
+}
+
+// Закрываем loadPassportPreview
+}
+
+const replaceButton = document.getElementById("replaceButton");
+
+
+
+const addTextButton = document.getElementById("addTextButton");
+const editTextButton = document.getElementById("editTextButton");
+editTextButton.addEventListener("click", async () => {
+  if (!selectedTextId) {
+    status.textContent = "SELECT A TEXT FIRST";
+    return;
+  }
+
+  const textWrapper = document.querySelector(
+    ".text-wrapper[style*='outline']"
+  );
+
+  const currentText = textWrapper?.textContent || "";
+  const newText = prompt("Edit your text:", currentText);
+
+  if (newText === null || !newText.trim()) return;
+
+  editTextButton.disabled = true;
+  status.textContent = "UPDATING TEXT...";
+
+  try {
+    const { error } = await db
+      .from("passport_texts")
+      .update({ content: newText.trim() })
+      .eq("id", selectedTextId);
+
+    if (error) throw error;
+
+    status.textContent = "TEXT UPDATED";
+    await loadPassportPreview();
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "EDIT ERROR: " + error.message;
+
+  } finally {
+    editTextButton.disabled = false;
+  }
+});
+
+replaceButton.addEventListener("click", async () => {
+  if (!selectedStampId) {
+    status.textContent = "SELECT A STAMP FIRST";
+    return;
+  }
+
+  const file = stampFile.files[0];
+
+  if (!file) {
+    status.textContent = "SELECT A PNG FILE";
+    return;
+  }
+
+  if (file.type !== "image/png") {
+    status.textContent = "ONLY PNG FILES ALLOWED";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    status.textContent = "FILE IS TOO LARGE";
+    return;
+  }
+
+  replaceButton.disabled = true;
+  status.textContent = "REPLACING STAMP...";
+
+  let newFilePath = null;
+let databaseUpdated = false;
+
+  try {
+    const { data: oldStamp, error: fetchError } = await db
+      .from("passport_stamps")
+      .select("image_path")
+      .eq("id", selectedStampId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    newFilePath =
+      crypto.randomUUID() + "-" +
+      file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const { error: uploadError } = await db.storage
+      .from("passport-stamps")
+      .upload(newFilePath, file, {
+        contentType: "image/png",
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { error: updateError } = await db
+      .from("passport_stamps")
+      .update({ image_path: newFilePath })
+      .eq("id", selectedStampId);
+
+    if (updateError) throw updateError;
+databaseUpdated = true;
+
+    const { error: removeError } = await db.storage
+      .from("passport-stamps")
+      .remove([oldStamp.image_path]);
+
+    if (removeError) {
+      console.error(removeError);
+      status.textContent = "STAMP REPLACED · OLD FILE NOT REMOVED";
+    } else {
+      status.textContent = "STAMP REPLACED SUCCESSFULLY";
+    }
+
+    stampFile.value = "";
+    await loadPassportPreview();
+
+  } catch (error) {
+    console.error(error);
+
+    if (newFilePath && !databaseUpdated) {
+  await db.storage
+    .from("passport-stamps")
+    .remove([newFilePath]);
+}
+
+    status.textContent = "REPLACE ERROR: " + error.message;
+
+  } finally {
+    replaceButton.disabled = false;
+  }
+});
+addTextButton.addEventListener("click", async () => {
+  const participantId = participantSelect.value;
+  const pageNumber = Number(pageSelect.value);
+
+  if (!participantId) {
+    status.textContent = "SELECT PARTICIPANT FIRST";
+    return;
+  }
+
+  const content = prompt("Enter your text:");
+
+  if (!content || !content.trim()) return;
+
+  addTextButton.disabled = true;
+  status.textContent = "ADDING TEXT...";
+
+  try {
+    const { error } = await db
+      .from("passport_texts")
+      .insert({
+  participant_id: participantId,
+  page_number: pageNumber,
+  content: content.trim(),
+  font_family: "Arial Narrow",
+  color: "#681B26"
+});
+
+    if (error) throw error;
+
+    status.textContent = "TEXT ADDED SUCCESSFULLY";
+    await loadPassportPreview();
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "TEXT ERROR: " + error.message;
+
+  } finally {
+    addTextButton.disabled = false;
+  }
+});
+
+deleteButton.addEventListener("click", async () => {
+  if (!selectedStampId) {
+    status.textContent = "SELECT A STAMP FIRST";
+    return;
+  }
+
+  const confirmed = confirm("Delete this stamp?");
+
+  if (!confirmed) return;
+
+  deleteButton.disabled = true;
+  status.textContent = "DELETING STAMP...";
+
+  try {
+    const { data: stamp, error: fetchError } = await db
+      .from("passport_stamps")
+      .select("image_path")
+      .eq("id", selectedStampId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const { error: deleteError } = await db
+      .from("passport_stamps")
+      .delete()
+      .eq("id", selectedStampId);
+
+    if (deleteError) throw deleteError;
+
+    const { error: storageError } = await db.storage
+      .from("passport-stamps")
+      .remove([stamp.image_path]);
+
+    if (storageError) {
+      console.error(storageError);
+      status.textContent = "STAMP DELETED, BUT FILE CLEANUP FAILED";
+    } else {
+      status.textContent = "STAMP DELETED";
+    }
+
+    selectedStampId = null;
+    await loadPassportPreview();
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "DELETE ERROR: " + error.message;
+  } finally {
+    deleteButton.disabled = false;
+  }
+});
+const deleteTextButton = document.getElementById("deleteTextButton");
+
+deleteTextButton.addEventListener("click", async () => {
+  if (!selectedTextId) {
+    status.textContent = "SELECT A TEXT FIRST";
+    return;
+  }
+
+  if (!confirm("Delete this text?")) return;
+
+  deleteTextButton.disabled = true;
+  status.textContent = "DELETING TEXT...";
+
+  try {
+    const { error } = await db
+      .from("passport_texts")
+      .delete()
+      .eq("id", selectedTextId);
+
+    if (error) throw error;
+
+    selectedTextId = null;
+    status.textContent = "TEXT DELETED";
+
+    await loadPassportPreview();
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "TEXT DELETE ERROR: " + error.message;
+
+  } finally {
+    deleteTextButton.disabled = false;
+  }
+});
+
+uploadButton.addEventListener("click", async () => {
+  const file = stampFile.files[0];
+  const participantId = participantSelect.value;
+  const pageNumber = Number(pageSelect.value);
+
+  if (!participantId) {
+    status.textContent = "SELECT PARTICIPANT FIRST";
+    return;
+  }
+
+  if (!file) {
+    status.textContent = "SELECT A PNG FILE";
+    return;
+  }
+
+  if (file.type !== "image/png") {
+    status.textContent = "ONLY PNG FILES ALLOWED";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    status.textContent = "FILE IS TOO LARGE";
+    return;
+  }
+
+  uploadButton.disabled = true;
+  status.textContent = "UPLOADING STAMP...";
+
+  try {
+    const filePath =
+      crypto.randomUUID() + "-" +
+      file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const { error: uploadError } = await db.storage
+      .from("passport-stamps")
+      .upload(filePath, file, {
+        contentType: "image/png",
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { error: insertError } = await db
+      .from("passport_stamps")
+      .insert({
+        participant_id: participantId,
+        page_number: pageNumber,
+        image_path: filePath
+      });
+
+    if (insertError) throw insertError;
+
+    status.textContent = "STAMP UPLOADED SUCCESSFULLY";
+await loadPassportPreview();
+    stampFile.value = "";
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "ERROR: " + error.message;
+  } finally {
+    uploadButton.disabled = false;
+  }
+});
+
+initializeEditor();
+
+participantSelect.addEventListener("change", loadPassportPreview);
+pageSelect.addEventListener("change", loadPassportPreview);</script>
+</body>
+</html>

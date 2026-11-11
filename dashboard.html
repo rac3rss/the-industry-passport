@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE INDUSTRY PASSPORT — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #171315;
+      color: #f4e9df;
+      font-family: Georgia, serif;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+    h1 { letter-spacing: 3px; }
+    .subtitle { color: #bba99e; }
+    .panel {
+      max-width: 850px;
+      margin: 40px auto;
+      padding: 30px;
+      border: 1px solid #8e725d;
+      background: #211b1d;
+    }
+    button {
+      background: #9b7657;
+      color: white;
+      border: 0;
+      padding: 12px 20px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    #status { color: #d7b995; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>THE INDUSTRY PASSPORT</h1>
+    <p class="subtitle">ADMINISTRATOR DASHBOARD</p>
+    <hr>
+    <h2>Welcome back.</h2>
+    <p id="status">Checking administrator access...</p>
+<h2>PARTICIPANTS</h2>
+
+<form id="participant-form">
+  <input
+    type="text"
+    id="participant-name"
+    placeholder="Participant name"
+    required
+  >
+
+  <input
+    type="text"
+    id="participant-project"
+    placeholder="Project name"
+    required
+  >
+
+  <button type="submit">ADD PARTICIPANT</button>
+</form>
+
+<p id="form-status"></p>
+
+<div id="participants-list">
+  Loading participants...
+</div>
+    <button id="logout" hidden>LOG OUT</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://iqbihzeiqvdpmnxhydkg.supabase.co";
+
+    // Вставь сюда тот же publishable key, который уже используется
+    // в твоём файле admin.html. Не вставляй service_role key.
+
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_uj_0pOoegG_p8oBUISibZA_EjwZieRs";
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+async function loadParticipants() {
+  const list = document.getElementById("participants-list");
+
+  list.textContent = "Loading participants...";
+
+  const { data, error } = await db
+    .from("participants")
+    .select("id, name, project_name, access_token, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "Error: " + error.message;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.textContent = "No participants yet.";
+    return;
+  }
+
+  const ul = document.createElement("ul");
+
+  data.forEach(participant => {
+    const li = document.createElement("li");
+
+    const name = document.createElement("strong");
+    name.textContent = participant.name;
+
+    const project = document.createElement("span");
+project.textContent = " — " + participant.project_name;
+
+const link = document.createElement("input");
+link.type = "text";
+link.readOnly = true;
+link.value = location.origin + "/?token=" + encodeURIComponent(participant.access_token);
+link.style.width = "100%";
+link.style.marginTop = "8px";
+
+const copyButton = document.createElement("button");
+copyButton.textContent = "COPY PASSPORT LINK";
+
+copyButton.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(link.value);
+    copyButton.textContent = "COPIED!";
+  } catch (error) {
+    copyButton.textContent = "COPY FAILED";
+  }
+});
+
+li.appendChild(name);
+li.appendChild(project);
+li.appendChild(document.createElement("br"));
+li.appendChild(link);
+li.appendChild(document.createElement("br"));
+li.appendChild(copyButton);
+ul.appendChild(li);
+    
+     });
+
+  list.replaceChildren(ul);
+}
+    async function checkAdmin() {
+      const status = document.getElementById("status");
+
+      const { data: { session }, error } = await db.auth.getSession();
+      if (error || !session) {
+        location.href = "/admin.html";
+        return;
+      }
+
+      const { data, error: adminError } = await db
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (adminError || !data) {
+        status.textContent = "Administrator access denied.";
+        return;
+      }
+
+            status.textContent = "Administrator access confirmed.";
+      document.getElementById("logout").hidden = false;
+
+      await loadParticipants();
+      }
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await db.auth.signOut();
+      location.href = "/admin.html";
+    });
+document.getElementById("participant-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const name = document.getElementById("participant-name").value.trim();
+  const project = document.getElementById("participant-project").value.trim();
+  const formStatus = document.getElementById("form-status");
+
+  if (!name || !project) return;
+
+  formStatus.textContent = "Adding participant...";
+
+  const token = crypto.randomUUID();
+
+  const { error } = await db
+    .from("participants")
+    .insert({
+      name: name,
+      project_name: project,
+      access_token: token
+    });
+
+  if (error) {
+    formStatus.textContent = "Error: " + error.message;
+    return;
+  }
+
+  document.getElementById("participant-form").reset();
+  formStatus.textContent = "Participant added successfully!";
+
+  await loadParticipants();
+});
+
+    checkAdmin();
+  </script>
+</body>
+</html>
