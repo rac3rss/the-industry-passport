@@ -231,6 +231,10 @@
       <button id="startMassStampButton">
   START ISSUANCE
 </button>
+      <button id="nextMassParticipantButton"
+  style="display:none; background:#66718a;color:white;">
+  NEXT PARTICIPANT
+</button>
 </div>
 
     <label>PASSPORT PAGE</label>
@@ -294,8 +298,15 @@ const participantSelect = document.getElementById("participant");
 const massStampPanel = document.getElementById("massStampPanel");
 const massParticipantList = document.getElementById("massParticipantList");
   const startMassStampButton = document.getElementById("startMassStampButton");
+  const nextMassParticipantButton = document.getElementById(
+  "nextMassParticipantButton"
+);
 
 let massParticipants = [];
+  let massCurrentIndex = 0;
+let massStampFiles = [];
+let massIssuanceActive = false;
+  let massCurrentStampUploaded = false;
 
 massStampButton.addEventListener("click", () => {
   const isHidden = massStampPanel.style.display === "none";
@@ -306,7 +317,37 @@ massStampButton.addEventListener("click", () => {
     ? "CLOSE MASS ISSUANCE"
     : "MASS STAMP ISSUANCE";
 });
-  startMassStampButton.addEventListener("click", () => {
+  startMassStampButton.addEventListener("click", async () => {
+    nextMassParticipantButton.addEventListener("click", async () => {
+  if (!massCurrentStampUploaded) {
+    status.textContent = "UPLOAD A STAMP FIRST";
+    return;
+  }
+
+  massCurrentIndex++;
+
+  if (massCurrentIndex >= massParticipants.length) {
+    massIssuanceActive = false;
+    nextMassParticipantButton.style.display = "none";
+    status.textContent = "MASS ISSUANCE COMPLETED";
+    return;
+  }
+
+  massCurrentStampUploaded = false;
+
+  participantSelect.value = massParticipants[massCurrentIndex];
+
+  stampFile.value = "";
+  nextMassParticipantButton.style.display = "none";
+
+  await loadPassportPreview();
+
+  status.textContent =
+    "MASS ISSUANCE · PARTICIPANT " +
+    (massCurrentIndex + 1) +
+    " OF " +
+    massParticipants.length;
+});
   massParticipants = Array.from(
     massParticipantList.querySelectorAll(
       'input[type="checkbox"]:checked'
@@ -323,6 +364,18 @@ massStampButton.addEventListener("click", () => {
 
   console.log("Selected participants:", massParticipants);
 });
+  massCurrentIndex = 0;
+massIssuanceActive = true;
+  massCurrentStampUploaded = false;
+nextMassParticipantButton.style.display = "none";
+
+participantSelect.value = massParticipants[massCurrentIndex];
+
+await loadPassportPreview();
+
+status.textContent =
+  "MASS ISSUANCE · PARTICIPANT 1 OF " +
+  massParticipants.length;
 
 async function initializeEditor() {
   try {
@@ -1194,11 +1247,15 @@ uploadButton.addEventListener("click", async () => {
         image_path: filePath
       });
 
-    if (insertError) throw insertError;
+   if (insertError) throw insertError;
 
-    status.textContent = "STAMP UPLOADED SUCCESSFULLY";
-await loadPassportPreview();
-    stampFile.value = "";
+if (massIssuanceActive) {
+  massCurrentStampUploaded = true;
+  nextMassParticipantButton.style.display = "block";
+  status.textContent = "STAMP UPLOADED · READY FOR NEXT PARTICIPANT";
+} else {
+  status.textContent = "STAMP UPLOADED SUCCESSFULLY";
+}
 
   } catch (error) {
     console.error(error);
