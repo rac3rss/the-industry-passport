@@ -412,15 +412,17 @@ stamps.forEach(stamp => {
   const wrapper = document.createElement("div");
   wrapper.className = "stamp-wrapper";
 function selectStamp() {
-wrapper.addEventListener("click", selectStamp);
   document.querySelectorAll(".stamp-wrapper").forEach(item => {
     item.style.outline = "none";
   });
 
   wrapper.style.outline = "2px solid #d6bd96";
   selectedStampId = stamp.id;
+  selectedTextId = null;
   status.textContent = "STAMP SELECTED";
 }
+
+wrapper.addEventListener("click", selectStamp);
   wrapper.style.left = Number(stamp.x) + "%";
   wrapper.style.top = Number(stamp.y) + "%";
   wrapper.style.width = Number(stamp.width) + "%";
