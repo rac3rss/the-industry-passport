@@ -212,6 +212,52 @@
         font-size: 8px;
       }
     }
+    .page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 28px auto;
+  padding: 16px;
+  color: #681B26;
+}
+
+.page-navigation button {
+  background: #681B26;
+  color: #F8F0E4;
+  border: 1px solid #B99A62;
+  padding: 12px 20px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.page-navigation button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#page-counter {
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.page-navigation.hidden {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .page-navigation {
+    gap: 10px;
+    padding: 12px 4px;
+  }
+
+  .page-navigation button {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+}
   </style>
 </head>
 
@@ -231,6 +277,11 @@
     </section>
 
     <section id="pages" class="pages"></section>
+    <nav id="page-navigation" class="page-navigation hidden">
+  <button id="prev-page" type="button">← PREVIOUS</button>
+  <span id="page-counter">01 / 05</span>
+  <button id="next-page" type="button">NEXT →</button>
+</nav>
 
     <section id="state" class="state">
       <strong>YOUR PASSPORT</strong>
@@ -480,6 +531,47 @@
         for (const page of (data.pages || [])) {
           pagesEl.appendChild(createPage(page));
         }
+        const pageElements = Array.from(
+  pagesEl.querySelectorAll(".page")
+);
+
+const pageNavigation = document.getElementById("page-navigation");
+const prevPageButton = document.getElementById("prev-page");
+const nextPageButton = document.getElementById("next-page");
+const pageCounter = document.getElementById("page-counter");
+
+if (pageElements.length > 0) {
+  let currentPage = 0;
+
+  function showPassportPage(index) {
+    currentPage = Math.max(
+      0,
+      Math.min(index, pageElements.length - 1)
+    );
+
+    pageElements.forEach((page, i) => {
+      page.hidden = i !== currentPage;
+    });
+
+    pageCounter.textContent =
+      `${String(currentPage + 1).padStart(2, "0")} / ${String(pageElements.length).padStart(2, "0")}`;
+
+    prevPageButton.disabled = currentPage === 0;
+    nextPageButton.disabled =
+      currentPage === pageElements.length - 1;
+  }
+
+  prevPageButton.addEventListener("click", () => {
+    showPassportPage(currentPage - 1);
+  });
+
+  nextPageButton.addEventListener("click", () => {
+    showPassportPage(currentPage + 1);
+  });
+
+  pageNavigation.classList.remove("hidden");
+  showPassportPage(0);
+}
 
         if (!data.pages?.length) {
           showMessage(
