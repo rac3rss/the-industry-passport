@@ -225,6 +225,13 @@
     <select id="participant">
       <option value="">Select participant</option>
     </select>
+    <div id="massStampPanel" style="display:none; margin-top:20px;">
+  <label>SELECT PARTICIPANTS</label>
+  <div id="massParticipantList"></div>
+      <button id="startMassStampButton">
+  START ISSUANCE
+</button>
+</div>
 
     <label>PASSPORT PAGE</label>
     <select id="page">
@@ -254,7 +261,9 @@
 <button id="replaceButton" style="background:#66718a;color:white;">
   REPLACE SELECTED STAMP
 </button>
-
+<button id="massStampButton" style="background:#9b825e;color:white;">
+  MASS STAMP ISSUANCE
+</button>
     <div id="status">EDITOR INITIALIZING...</div>
   </section>
 
@@ -281,6 +290,39 @@ const db = window.supabase.createClient(
 
 const status = document.getElementById("status");
 const participantSelect = document.getElementById("participant");
+  const massStampButton = document.getElementById("massStampButton");
+const massStampPanel = document.getElementById("massStampPanel");
+const massParticipantList = document.getElementById("massParticipantList");
+  const startMassStampButton = document.getElementById("startMassStampButton");
+
+let massParticipants = [];
+
+massStampButton.addEventListener("click", () => {
+  const isHidden = massStampPanel.style.display === "none";
+
+  massStampPanel.style.display = isHidden ? "block" : "none";
+
+  massStampButton.textContent = isHidden
+    ? "CLOSE MASS ISSUANCE"
+    : "MASS STAMP ISSUANCE";
+});
+  startMassStampButton.addEventListener("click", () => {
+  massParticipants = Array.from(
+    massParticipantList.querySelectorAll(
+      'input[type="checkbox"]:checked'
+    )
+  ).map(checkbox => checkbox.value);
+
+  if (massParticipants.length === 0) {
+    status.textContent = "SELECT AT LEAST ONE PARTICIPANT";
+    return;
+  }
+
+  status.textContent =
+    massParticipants.length + " PARTICIPANTS SELECTED";
+
+  console.log("Selected participants:", massParticipants);
+});
 
 async function initializeEditor() {
   try {
@@ -322,7 +364,30 @@ async function initializeEditor() {
 
       participantSelect.appendChild(option);
     });
+massParticipantList.innerHTML = "";
 
+participants.forEach(person => {
+  const label = document.createElement("label");
+
+  label.style.display = "flex";
+  label.style.alignItems = "center";
+  label.style.gap = "10px";
+  label.style.margin = "10px 0";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.value = person.id;
+  checkbox.style.width = "auto";
+
+  label.appendChild(checkbox);
+  label.append(
+    document.createTextNode(
+      person.name + " — " + person.project_name
+    )
+  );
+
+  massParticipantList.appendChild(label);
+});
     status.textContent = "ADMIN ACCESS CONFIRMED";
   } catch (error) {
     console.error(error);
