@@ -373,23 +373,6 @@ nextMassParticipantButton.addEventListener("click", async () => {
     " OF " +
     massParticipants.length;
 });
-  massParticipants = Array.from(
-    massParticipantList.querySelectorAll(
-      'input[type="checkbox"]:checked'
-    )
-  ).map(checkbox => checkbox.value);
-
-  if (massParticipants.length === 0) {
-    status.textContent = "SELECT AT LEAST ONE PARTICIPANT";
-    return;
-  }
-
-  status.textContent =
-    massParticipants.length + " PARTICIPANTS SELECTED";
-
-  console.log("Selected participants:", massParticipants);
-});
- });
 
 async function initializeEditor() {
   try {
