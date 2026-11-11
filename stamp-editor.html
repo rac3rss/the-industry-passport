@@ -519,10 +519,12 @@ const { data: texts, error: textsError } = await db
 if (textsError) throw textsError;
 
     
-stamps.forEach(stamp => {
-  const { data: stampFile } = db.storage
-    .from("passport-stamps")
-    .getPublicUrl(stamp.image_path);
+for (const stamp of stamps) {
+ const { data: stampFile, error: stampFileError } = await db.storage
+  .from("passport-stamps")
+  .createSignedUrl(stamp.image_path, 3600);
+
+if (stampFileError) throw stampFileError;
 
   const wrapper = document.createElement("div");
   wrapper.className = "stamp-wrapper";
@@ -773,7 +775,7 @@ resizeHandle.addEventListener("lostpointercapture", async () => {
     });
   }
 });
-});
+}
 
 texts.forEach(textItem => {
   const textWrapper = document.createElement("div");
