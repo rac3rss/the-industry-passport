@@ -99,7 +99,8 @@
     const restoreSection = document.getElementById("restoreSection");
 const restoreFile = document.getElementById("restoreFile");
 const restoreButton = document.getElementById("restoreButton");
-    restoreFile.addEventListener("change", () => {
+   
+restoreFile.addEventListener("change", async () => {
   const file = restoreFile.files[0];
 
   if (!file) return;
@@ -110,8 +111,66 @@ const restoreButton = document.getElementById("restoreButton");
     return;
   }
 
-  status.textContent = "BACKUP FILE SELECTED: " + file.name;
+  try {
+    status.textContent = "CHECKING BACKUP...";
+
+    const zip = await JSZip.loadAsync(file);
+    const jsonFile = zip.file("backup.json");
+
+    if (!jsonFile) {
+      throw new Error("backup.json NOT FOUND");
+    }
+
+    const backup = JSON.parse(
+      await jsonFile.async("string")
+    );
+
+    const requiredTables = [
+      "participants",
+      "passport_pages",
+      "passport_stamps",
+      "passport_texts"
+    ];
+
+    if (!backup.tables) {
+      throw new Error("TABLE DATA NOT FOUND");
+    }
+
+    for (const table of requiredTables) {
+      if (!Array.isArray(backup.tables[table])) {
+        throw new Error("INVALID TABLE: " + table);
+      }
+    }
+
+    const hasPages = Object.keys(zip.files).some(
+      path => path.startsWith("passport-pages/")
+        && !zip.files[path].dir
+    );
+
+    const hasStamps = Object.keys(zip.files).some(
+      path => path.startsWith("passport-stamps/")
+        && !zip.files[path].dir
+    );
+
+    const totalRecords = requiredTables.reduce(
+      (sum, table) => sum + backup.tables[table].length,
+      0
+    );
+
+    status.textContent =
+      "BACKUP VERIFIED · " +
+      totalRecords +
+      " RECORDS · PAGES: " +
+      (hasPages ? "YES" : "NO") +
+      " · STAMPS: " +
+      (hasStamps ? "YES" : "NO");
+
+  } catch (error) {
+    console.error(error);
+    status.textContent = "INVALID BACKUP: " + error.message;
+  }
 });
+
     
 async function exportTable(tableName) {
   let allRows = [];
