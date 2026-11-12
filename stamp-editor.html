@@ -274,7 +274,8 @@
 <button type="button" id="massStampButton" style="background:#9b825e;color:white;">
   MASS STAMP ISSUANCE
 </button>
-
+<div id="status">EDITOR INITIALIZING...</div>
+    
   <section class="workspace">
     <div class="placeholder">
       PASSPORT PAGE PREVIEW
@@ -297,6 +298,8 @@ const db = window.supabase.createClient(
 );
 
 const status = document.getElementById("status");
+  console.log("STATUS ELEMENT:", status);
+console.log("MASS PARTICIPANT LIST:", massParticipantList);
 const participantSelect = document.getElementById("participant");
   const massStampButton = document.getElementById("massStampButton");
 const massStampPanel = document.getElementById("massStampPanel");
