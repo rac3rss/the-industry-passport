@@ -99,6 +99,19 @@
     const restoreSection = document.getElementById("restoreSection");
 const restoreFile = document.getElementById("restoreFile");
 const restoreButton = document.getElementById("restoreButton");
+    restoreFile.addEventListener("change", () => {
+  const file = restoreFile.files[0];
+
+  if (!file) return;
+
+  if (!file.name.toLowerCase().endsWith(".zip")) {
+    status.textContent = "PLEASE SELECT A ZIP BACKUP";
+    restoreFile.value = "";
+    return;
+  }
+
+  status.textContent = "BACKUP FILE SELECTED: " + file.name;
+});
     
 async function exportTable(tableName) {
   let allRows = [];
