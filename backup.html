@@ -132,21 +132,66 @@ backupButton.addEventListener("click", async () => {
         await exportTable(tableName);
     }
 
-    const blob = new Blob(
-      [JSON.stringify(backup, null, 2)],
-      { type: "application/json" }
+    
+const zip = new JSZip();
+
+// Сохраняем данные таблиц внутри архива
+zip.file(
+  "backup.json",
+  JSON.stringify(backup, null, 2)
+);
+
+// Добавляем изображения страниц и штампов
+const storageFiles = [
+  {
+    bucket: "passport-pages",
+    rows: backup.tables.passport_pages
+  },
+  {
+    bucket: "passport-stamps",
+    rows: backup.tables.passport_stamps
+  }
+];
+
+for (const item of storageFiles) {
+  for (const row of item.rows) {
+    if (!row.image_path) continue;
+
+    status.textContent =
+      "DOWNLOADING IMAGE: " + row.image_path;
+
+    const { data: file, error } = await db.storage
+      .from(item.bucket)
+      .download(row.image_path);
+
+    if (error) throw error;
+
+    zip.file(
+      item.bucket + "/" + row.image_path,
+      file
     );
+  }
+}
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+// Создаём ZIP-архив
+status.textContent = "BUILDING ZIP ARCHIVE...";
 
-    link.href = url;
-    link.download =
-      "industry-passport-backup-" +
-      new Date().toISOString().slice(0, 10) +
-      ".json";
+const blob = await zip.generateAsync({
+  type: "blob"
+});
 
-    link.click();
+const url = URL.createObjectURL(blob);
+const link = document.createElement("a");
+
+link.href = url;
+link.download =
+  "industry-passport-backup-" +
+  new Date().toISOString().slice(0, 10) +
+  ".zip";
+
+link.click();
+
+URL.revokeObjectURL(url);
 
     URL.revokeObjectURL(url);
 
