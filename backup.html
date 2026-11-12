@@ -280,12 +280,19 @@ if (contentType === "application/octet-stream") {
   throw new Error("UNSUPPORTED IMAGE FORMAT: " + imagePath);
 }
 
+
+const typedBlob = new Blob(
+  [imageBlob],
+  { type: contentType }
+);
+
 const { error } = await db.storage
   .from(bucket)
-  .upload(imagePath, imageBlob, {
+  .upload(imagePath, typedBlob, {
     upsert: false,
     contentType: contentType
   });
+
 
 
         if (error) {
