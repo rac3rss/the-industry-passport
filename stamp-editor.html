@@ -249,33 +249,28 @@
     <label>STAMP IMAGE</label>
     <input type="file" id="stampFile" accept="image/png">
 
-<button type="button" id="uploadButton">UPLOAD STAMP</button>
-
-<button type="button" id="addTextButton" style="background:#8b789f;color:white;">
+    <button id="uploadButton">UPLOAD STAMP</button>
+<button id="addTextButton" style="background:#8b789f;color:white;">
   ADD TEXT
 </button>
-
-<button type="button" id="editTextButton" style="background:#66718a;color:white;">
+<button id="editTextButton" style="background:#66718a;color:white;">
   EDIT SELECTED TEXT
 </button>
-
-<button type="button" id="deleteButton" style="background:#713f43;color:white;">
+<button id="deleteButton" style="background:#713f43;color:white;">
   DELETE SELECTED STAMP
 </button>
-
-<button type="button" id="deleteTextButton" style="background:#713f43;color:white;">
+<button id="deleteTextButton" style="background:#713f43;color:white;">
   DELETE SELECTED TEXT
 </button>
-
-<button type="button" id="replaceButton" style="background:#66718a;color:white;">
+<button id="replaceButton" style="background:#66718a;color:white;">
   REPLACE SELECTED STAMP
 </button>
-
-<button type="button" id="massStampButton" style="background:#9b825e;color:white;">
+<button id="massStampButton" style="background:#9b825e;color:white;">
   MASS STAMP ISSUANCE
 </button>
-<div id="status">EDITOR INITIALIZING...</div>
-    
+    <div id="status">EDITOR INITIALIZING...</div>
+  </section>
+
   <section class="workspace">
     <div class="placeholder">
       PASSPORT PAGE PREVIEW
@@ -298,8 +293,6 @@ const db = window.supabase.createClient(
 );
 
 const status = document.getElementById("status");
-  console.log("STATUS ELEMENT:", status);
-console.log("MASS PARTICIPANT LIST:", massParticipantList);
 const participantSelect = document.getElementById("participant");
   const massStampButton = document.getElementById("massStampButton");
 const massStampPanel = document.getElementById("massStampPanel");
