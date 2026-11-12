@@ -386,25 +386,29 @@ async function initializeEditor() {
       return;
     }
 
-    const { data: admin, error: adminError } = await db
-      .from("admin_users")
-      .select("user_id")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
+    // Проверяем права администратора и загружаем участников одновременно.
+    const [
+      { data: admin, error: adminError },
+      { data: participants, error: participantsError }
+    ] = await Promise.all([
+      db
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", session.user.id)
+        .maybeSingle(),
+      db
+        .from("participants")
+        .select("id, name, project_name")
+        .order("created_at", { ascending: false })
+    ]);
 
     if (adminError) throw adminError;
+    if (participantsError) throw participantsError;
 
     if (!admin) {
       status.textContent = "ACCESS DENIED";
       return;
     }
-
-    const { data: participants, error } = await db
-      .from("participants")
-      .select("id, name, project_name")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
 
     participants.forEach(person => {
       const option = document.createElement("option");
@@ -482,12 +486,30 @@ async function loadPassportPreview() {
       return;
     }
 
-    const { data: image, error: imageError } = await db
-      .storage
-      .from("passport-pages")
-      .createSignedUrl(page.image_path, 3600);
+    // Получаем ссылку на фон, штампы и тексты параллельно.
+    const [
+      { data: image, error: imageError },
+      { data: stamps, error: stampsError },
+      { data: texts, error: textsError }
+    ] = await Promise.all([
+      db.storage
+        .from("passport-pages")
+        .createSignedUrl(page.image_path, 3600),
+      db
+        .from("passport_stamps")
+        .select("id, image_path, x, y, width, rotation")
+        .eq("participant_id", participantId)
+        .eq("page_number", pageNumber),
+      db
+        .from("passport_texts")
+        .select("*")
+        .eq("participant_id", participantId)
+        .eq("page_number", pageNumber)
+    ]);
 
     if (imageError) throw imageError;
+    if (stampsError) throw stampsError;
+    if (textsError) throw textsError;
 
     const canvas = document.createElement("div");
     canvas.className = "page-canvas";
@@ -503,28 +525,26 @@ async function loadPassportPreview() {
     canvas.append(img, layer);
     workspace.replaceChildren(canvas);
 
-    const { data: stamps, error: stampsError } = await db
-      .from("passport_stamps")
-      .select("id, image_path, x, y, width, rotation")
-      .eq("participant_id", participantId)
-      .eq("page_number", pageNumber);
+    // Ссылки на все штампы также создаём одновременно, а не по одной.
+    const stampUrls = await Promise.all(
+      (stamps || []).map(async stamp => {
+        const { data, error } = await db.storage
+          .from("passport-stamps")
+          .createSignedUrl(stamp.image_path, 3600);
 
-    if (stampsError) throw stampsError;
-const { data: texts, error: textsError } = await db
-  .from("passport_texts")
-  .select("*")
-  .eq("participant_id", participantId)
-  .eq("page_number", pageNumber);
+        if (error) throw error;
+        return [stamp.id, data.signedUrl];
+      })
+    );
 
-if (textsError) throw textsError;
+    const stampUrlById = new Map(stampUrls);
 
+    // Дальше существующие обработчики перемещения, изменения размера
+    // и поворота штампов работают без изменений.
     
-for (const stamp of stamps) {
- const { data: stampFile, error: stampFileError } = await db.storage
-  .from("passport-stamps")
-  .createSignedUrl(stamp.image_path, 3600);
-
-if (stampFileError) throw stampFileError;
+for (const stamp of (stamps || [])) {
+  const stampSignedUrl = stampUrlById.get(stamp.id);
+  if (!stampSignedUrl) continue;
 
   const wrapper = document.createElement("div");
   wrapper.className = "stamp-wrapper";
@@ -549,8 +569,9 @@ wrapper.addEventListener("click", selectStamp);
 
   const stampImg = document.createElement("img");
   stampImg.className = "stamp-image";
-  stampImg.src = stampFile.publicUrl;
+  stampImg.src = stampSignedUrl;
   stampImg.draggable = false;
+  stampImg.loading = "lazy";
 
   const resizeHandle = document.createElement("div");
 resizeHandle.className = "resize-handle";
@@ -1247,6 +1268,9 @@ uploadButton.addEventListener("click", async () => {
       });
 
    if (insertError) throw insertError;
+
+    // Обновляем только область предпросмотра — страницу целиком перезагружать не нужно.
+    await loadPassportPreview();
 
 if (massIssuanceActive) {
   massCurrentStampUploaded = true;
