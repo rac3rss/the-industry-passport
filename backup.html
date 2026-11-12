@@ -82,6 +82,82 @@
 
     const status = document.getElementById("status");
     const backupButton = document.getElementById("backupButton");
+    
+async function exportTable(tableName) {
+  let allRows = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (true) {
+    const { data, error } = await db
+      .from(tableName)
+      .select("*")
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    allRows = allRows.concat(data);
+
+    if (data.length < limit) break;
+
+    offset += limit;
+  }
+
+  return allRows;
+}
+
+backupButton.addEventListener("click", async () => {
+  try {
+    backupButton.disabled = true;
+    status.textContent = "CREATING BACKUP...";
+
+    const backup = {
+      version: 1,
+      created_at: new Date().toISOString(),
+      tables: {}
+    };
+
+    const tableNames = [
+      "participants",
+      "passport_pages",
+      "passport_stamps",
+      "passport_texts"
+    ];
+
+    for (const tableName of tableNames) {
+      status.textContent = "EXPORTING: " + tableName;
+
+      backup.tables[tableName] =
+        await exportTable(tableName);
+    }
+
+    const blob = new Blob(
+      [JSON.stringify(backup, null, 2)],
+      { type: "application/json" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download =
+      "industry-passport-backup-" +
+      new Date().toISOString().slice(0, 10) +
+      ".json";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+    status.textContent = "BACKUP CREATED SUCCESSFULLY";
+  } catch (error) {
+    console.error(error);
+    status.textContent = "BACKUP ERROR: " + error.message;
+  } finally {
+    backupButton.disabled = false;
+  }
+});
+
 
     async function initializeBackup() {
       const { data: { session }, error } =
