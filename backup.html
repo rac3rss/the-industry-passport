@@ -68,6 +68,19 @@
     <button id="backupButton" style="display:none;">
       CREATE BACKUP
     </button>
+    <div id="restoreSection" style="display:none; margin-top:30px;">
+  <p>RESTORE FROM BACKUP</p>
+
+  <input
+    type="file"
+    id="restoreFile"
+    accept=".zip"
+  >
+
+  <button id="restoreButton">
+    RESTORE BACKUP
+  </button>
+</div>
   </main>
 
   <script>
@@ -83,6 +96,9 @@
 
     const status = document.getElementById("status");
     const backupButton = document.getElementById("backupButton");
+    const restoreSection = document.getElementById("restoreSection");
+const restoreFile = document.getElementById("restoreFile");
+const restoreButton = document.getElementById("restoreButton");
     
 async function exportTable(tableName) {
   let allRows = [];
@@ -227,6 +243,7 @@ URL.revokeObjectURL(url);
 
       status.textContent = "ADMIN ACCESS VERIFIED";
       backupButton.style.display = "block";
+      restoreSection.style.display = "block";
     }
 
     initializeBackup();
