@@ -172,6 +172,152 @@ restoreFile.addEventListener("change", async () => {
 });
 
     
+restoreButton.addEventListener("click", async () => {
+  const file = restoreFile.files[0];
+
+  if (!file) {
+    status.textContent = "PLEASE SELECT A BACKUP FIRST";
+    return;
+  }
+
+  if (!confirm(
+    "RESTORE BACKUP? Existing records and files will not be overwritten."
+  )) {
+    return;
+  }
+
+  try {
+    restoreButton.disabled = true;
+    status.textContent = "PREPARING RESTORE...";
+
+    const zip = await JSZip.loadAsync(file);
+    const jsonFile = zip.file("backup.json");
+
+    if (!jsonFile) {
+      throw new Error("backup.json NOT FOUND");
+    }
+
+    const backup = JSON.parse(
+      await jsonFile.async("string")
+    );
+
+    const tableNames = [
+      "participants",
+      "passport_pages",
+      "passport_stamps",
+      "passport_texts"
+    ];
+
+    // Проверяем структуру архива
+    for (const table of tableNames) {
+      if (!Array.isArray(backup.tables?.[table])) {
+        throw new Error("INVALID TABLE: " + table);
+      }
+    }
+
+    // Проверяем, что изображения из записей есть в ZIP
+    const storageBuckets = [
+      "passport-pages",
+      "passport-stamps"
+    ];
+
+    for (const bucket of storageBuckets) {
+      const table = bucket === "passport-pages"
+        ? "passport_pages"
+        : "passport_stamps";
+
+      for (const row of backup.tables[table]) {
+        if (!row.image_path) continue;
+
+        const imageEntry = zip.file(
+          bucket + "/" + row.image_path
+        );
+
+        if (!imageEntry) {
+          throw new Error(
+            "IMAGE NOT FOUND: " + row.image_path
+          );
+        }
+      }
+    }
+
+    // Восстанавливаем изображения
+    for (const bucket of storageBuckets) {
+      const prefix = bucket + "/";
+
+      const imagePaths = Object.keys(zip.files).filter(
+        path =>
+          path.startsWith(prefix) &&
+          !zip.files[path].dir
+      );
+
+      for (const path of imagePaths) {
+        status.textContent =
+          "RESTORING IMAGE: " + path;
+
+        const imageBlob = await zip.files[path].async("blob");
+        const imagePath = path.slice(prefix.length);
+
+        const { error } = await db.storage
+          .from(bucket)
+          .upload(imagePath, imageBlob, {
+            upsert: false
+          });
+
+        if (error) {
+          const message = error.message || "";
+
+          const alreadyExists =
+            error.statusCode === 409 ||
+            error.statusCode === "409" ||
+            /already exists|duplicate/i.test(message);
+
+          if (!alreadyExists) {
+            throw error;
+          }
+        }
+      }
+    }
+
+    // Добавляем только отсутствующие записи
+    for (const table of tableNames) {
+      const rows = backup.tables[table];
+
+      if (rows.length === 0) continue;
+
+      status.textContent = "RESTORING TABLE: " + table;
+
+      const batchSize = 100;
+
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+
+        const { error } = await db
+          .from(table)
+          .upsert(batch, {
+            onConflict: "id",
+            ignoreDuplicates: true
+          });
+
+        if (error) throw error;
+      }
+    }
+
+    status.textContent =
+      "RESTORE COMPLETED · EXISTING DATA PRESERVED";
+
+  } catch (error) {
+    console.error(error);
+
+    status.textContent =
+      "RESTORE ERROR: " + error.message;
+
+  } finally {
+    restoreButton.disabled = false;
+  }
+});
+
+    
 async function exportTable(tableName) {
   let allRows = [];
   let offset = 0;
