@@ -255,14 +255,38 @@ restoreButton.addEventListener("click", async () => {
         status.textContent =
           "RESTORING IMAGE: " + path;
 
-        const imageBlob = await zip.files[path].async("blob");
-        const imagePath = path.slice(prefix.length);
+        
+const imageBlob = await zip.files[path].async("blob");
+const imagePath = path.slice(prefix.length);
 
-        const { error } = await db.storage
-          .from(bucket)
-          .upload(imagePath, imageBlob, {
-            upsert: false
-          });
+const extension = imagePath
+  .split(".")
+  .pop()
+  .toLowerCase();
+
+const mimeTypes = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  svg: "image/svg+xml"
+};
+
+const contentType =
+  mimeTypes[extension] || "application/octet-stream";
+
+if (contentType === "application/octet-stream") {
+  throw new Error("UNSUPPORTED IMAGE FORMAT: " + imagePath);
+}
+
+const { error } = await db.storage
+  .from(bucket)
+  .upload(imagePath, imageBlob, {
+    upsert: false,
+    contentType: contentType
+  });
+
 
         if (error) {
           const message = error.message || "";
